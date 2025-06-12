@@ -1,0 +1,195 @@
+import { ReactNode, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
+import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/store/authStore";
+import { mockShops } from "@/lib/mockData";
+import {
+  BarChart3,
+  ShoppingCart,
+  Users,
+  Package,
+  MapPin,
+  Settings,
+  Bell,
+  LogOut,
+  Menu,
+  X,
+  Crown,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ShopLayoutProps {
+  children: ReactNode;
+}
+
+const sidebarItems = [
+  { href: "/shop", icon: BarChart3, label: "Dashboard" },
+  { href: "/shop/orders", icon: ShoppingCart, label: "Orders" },
+  { href: "/shop/customers", icon: Users, label: "Customers" },
+  { href: "/shop/products", icon: Package, label: "Products" },
+  { href: "/shop/delivery", icon: MapPin, label: "Delivery" },
+  { href: "/shop/settings", icon: Settings, label: "Settings" },
+];
+
+export function ShopLayout({ children }: ShopLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+
+  // Get shop data for current user
+  const shop = mockShops.find((s) => s.ownerId === user?.id);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const getSubscriptionBadge = (plan: string) => {
+    switch (plan) {
+      case "premier":
+        return (
+          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+            <Crown className="w-3 h-3 mr-1" />
+            Premier
+          </Badge>
+        );
+      case "basic":
+        return <Badge variant="secondary">Basic</Badge>;
+      case "trial":
+        return <Badge variant="outline">Trial</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo */}
+          <div className="flex h-16 items-center justify-between px-6 border-b">
+            <Logo size="md" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Shop Info */}
+          {shop && (
+            <div className="px-6 py-4 bg-water-50 border-b">
+              <h3 className="font-semibold text-gray-900 mb-1">{shop.name}</h3>
+              <p className="text-sm text-gray-600 mb-2">
+                {shop.location.address}
+              </p>
+              {getSubscriptionBadge(shop.subscription)}
+              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                <span>Rating: {shop.rating}★</span>
+                <span>Orders: {shop.totalOrders}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1 px-3 py-4">
+            {sidebarItems.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-water-50 text-water-700 border-r-2 border-water-500"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5",
+                      isActive ? "text-water-600" : "text-gray-400",
+                    )}
+                  />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* User info and logout */}
+          <div className="border-t p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-8 w-8 rounded-full bg-water-100 flex items-center justify-center">
+                <span className="text-sm font-medium text-water-700">
+                  {user?.name.charAt(0)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">Shop Owner</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-gray-600 hover:text-gray-900"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="lg:pl-64">
+        {/* Top bar */}
+        <header className="flex h-16 items-center gap-4 border-b bg-white px-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <div className="flex-1" />
+
+          <Button variant="ghost" size="sm" className="relative">
+            <Bell className="h-5 w-5" />
+            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
+          </Button>
+        </header>
+
+        {/* Page content */}
+        <main className="p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
