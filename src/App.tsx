@@ -11,6 +11,8 @@ import AdminShops from "./pages/admin/Shops";
 import AdminOrders from "./pages/admin/Orders";
 import ShopDashboard from "./pages/shop/Dashboard";
 import ShopOrders from "./pages/shop/Orders";
+import ShopCustomers from "./pages/shop/Customers";
+import ShopProducts from "./pages/shop/Products";
 import ClientDashboard from "./pages/client/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -142,10 +144,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
-                  <PlaceholderPage
-                    title="Customer Management"
-                    description="Manage your customers"
-                  />
+                  <ShopCustomers />
                 </ShopLayout>
               </ProtectedRoute>
             }
@@ -155,10 +154,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
-                  <PlaceholderPage
-                    title="Product Management"
-                    description="Manage your water products and pricing"
-                  />
+                  <ShopProducts />
                 </ShopLayout>
               </ProtectedRoute>
             }
