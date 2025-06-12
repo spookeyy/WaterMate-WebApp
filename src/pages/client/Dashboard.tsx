@@ -26,6 +26,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/store/authStore";
 import { useOrderStore } from "@/store/orderStore";
 import { useNotificationStore } from "@/store/notificationStore";
@@ -45,19 +51,25 @@ import {
   CreditCard,
   Smartphone,
   Bell,
+  User,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
 export default function ClientDashboard() {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const { createOrder, getOrdersByClient, isLoading } = useOrderStore();
   const { getUnreadCount } = useNotificationStore();
   const navigate = useNavigate();
 
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [showMpesaDialog, setShowMpesaDialog] = useState(false);
+  const [mpesaPhone, setMpesaPhone] = useState(user?.phone || "");
+  const [processingPayment, setProcessingPayment] = useState(false);
   const [orderForm, setOrderForm] = useState<OrderForm>({
     litres: 20,
     deliveryLocation: user?.location || {
@@ -72,6 +84,11 @@ export default function ClientDashboard() {
   const clientOrders = getOrdersByClient(user?.id || "");
   const recentOrders = clientOrders.slice(0, 5);
   const unreadCount = user ? getUnreadCount(user.id) : 0;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   // Calculate distance between user and shop (simplified)
   const calculateDistance = (shop: Shop) => {
@@ -101,6 +118,22 @@ export default function ClientDashboard() {
     .filter((shop) => shop.distance <= shop.operatingZone)
     .sort((a, b) => a.distance - b.distance);
 
+  const simulateMpesaPayment = async () => {
+    setProcessingPayment(true);
+
+    // Simulate MPESA STK push
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Simulate payment processing
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    setProcessingPayment(false);
+    setShowMpesaDialog(false);
+
+    // Proceed with order creation
+    await handlePlaceOrder();
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedShop || !user) return;
 
@@ -112,12 +145,19 @@ export default function ClientDashboard() {
         totalAmount: orderForm.litres * selectedShop.pricePerLitre,
         deliveryLocation: orderForm.deliveryLocation,
         paymentMethod: orderForm.paymentMethod,
-        paymentStatus: "pending" as const,
+        paymentStatus:
+          orderForm.paymentMethod === "mpesa"
+            ? "completed"
+            : ("pending" as const),
         status: "pending" as const,
         clientPhone: user.phone,
         clientName: user.name,
         shopName: selectedShop.name,
         notes: orderForm.notes,
+        mpesaTransactionId:
+          orderForm.paymentMethod === "mpesa"
+            ? `TXN${Math.random().toString(36).substr(2, 9)}`
+            : undefined,
       };
 
       await createOrder(orderData);
@@ -137,6 +177,15 @@ export default function ClientDashboard() {
       });
     } catch (error) {
       console.error("Failed to place order:", error);
+    }
+  };
+
+  const handleOrderSubmit = () => {
+    if (orderForm.paymentMethod === "mpesa") {
+      setShowOrderDialog(false);
+      setShowMpesaDialog(true);
+    } else {
+      handlePlaceOrder();
     }
   };
 
@@ -198,19 +247,42 @@ export default function ClientDashboard() {
                 <p className="text-sm text-gray-600">Welcome, {user?.name}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative"
-              onClick={() => navigate("/client/notifications")}
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="relative"
+                onClick={() => navigate("/client/notifications")}
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/client/notifications")}
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    Notifications
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
@@ -615,7 +687,7 @@ export default function ClientDashboard() {
                       Cancel
                     </Button>
                     <Button
-                      onClick={handlePlaceOrder}
+                      onClick={handleOrderSubmit}
                       disabled={
                         isLoading ||
                         orderForm.litres < selectedShop.minimumOrderLitres
@@ -627,6 +699,107 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* MPESA Payment Dialog */}
+          <Dialog open={showMpesaDialog} onOpenChange={setShowMpesaDialog}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Smartphone className="h-6 w-6 text-green-600" />
+                  MPESA Payment
+                </DialogTitle>
+                <DialogDescription>
+                  Complete your payment using MPESA
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {!processingPayment ? (
+                  <>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Smartphone className="h-5 w-5 text-green-600" />
+                        <span className="font-medium text-green-800">
+                          MPESA STK Push
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-700">
+                        You will receive a prompt on your phone to authorize the
+                        payment
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="mpesa-phone">Phone Number</Label>
+                      <Input
+                        id="mpesa-phone"
+                        value={mpesaPhone}
+                        onChange={(e) => setMpesaPhone(e.target.value)}
+                        placeholder="+254700000000"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-medium mb-2">Payment Details</h3>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Amount:</span>
+                          <span className="font-medium">
+                            KES{" "}
+                            {selectedShop &&
+                              orderForm.litres * selectedShop.pricePerLitre}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Shop:</span>
+                          <span>{selectedShop?.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Quantity:</span>
+                          <span>{orderForm.litres}L</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowMpesaDialog(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={simulateMpesaPayment}
+                        disabled={!mpesaPhone || mpesaPhone.length < 10}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        Pay with MPESA
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Processing Payment
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Please check your phone and enter your MPESA PIN to
+                      complete the payment
+                    </p>
+                    <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                      <p className="text-sm text-yellow-800">
+                        ⏱️ This may take a few seconds...
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         </div>

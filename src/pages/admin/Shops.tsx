@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -52,6 +54,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function AdminShops() {
+  const navigate = useNavigate();
   const [shops, setShops] = useState<Shop[]>(mockShops);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -61,6 +64,7 @@ export default function AdminShops() {
     "all" | SubscriptionPlan
   >("all");
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+  const [editingShop, setEditingShop] = useState<Shop | null>(null);
 
   const filteredShops = shops.filter((shop) => {
     const matchesSearch =
@@ -84,15 +88,15 @@ export default function AdminShops() {
     );
   };
 
-  const updateSubscription = (
-    shopId: string,
-    subscription: SubscriptionPlan,
-  ) => {
+  const updateShop = (updatedShop: Shop) => {
     setShops(
-      shops.map((shop) =>
-        shop.id === shopId ? { ...shop, subscription } : shop,
-      ),
+      shops.map((shop) => (shop.id === updatedShop.id ? updatedShop : shop)),
     );
+    setEditingShop(null);
+  };
+
+  const deleteShop = (shopId: string) => {
+    setShops(shops.filter((shop) => shop.id !== shopId));
   };
 
   const getSubscriptionBadge = (plan: SubscriptionPlan) => {
@@ -115,6 +119,13 @@ export default function AdminShops() {
     return mockUsers.find((user) => user.id === ownerId);
   };
 
+  const shopStats = {
+    total: shops.length,
+    active: shops.filter((s) => s.isActive).length,
+    premier: shops.filter((s) => s.subscription === "premier").length,
+    trial: shops.filter((s) => s.subscription === "trial").length,
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -128,7 +139,10 @@ export default function AdminShops() {
             Manage all registered water shops and their subscriptions
           </p>
         </div>
-        <Button className="bg-water-600 hover:bg-water-700">
+        <Button
+          className="bg-water-600 hover:bg-water-700"
+          onClick={() => navigate("/admin/shops/add")}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add New Shop
         </Button>
@@ -139,32 +153,28 @@ export default function AdminShops() {
         {[
           {
             title: "Total Shops",
-            value: shops.length.toString(),
+            value: shopStats.total.toString(),
             description: "All registered shops",
             icon: Building2,
             color: "text-blue-600",
           },
           {
             title: "Active Shops",
-            value: shops.filter((s) => s.isActive).length.toString(),
+            value: shopStats.active.toString(),
             description: "Currently operational",
             icon: CheckCircle,
             color: "text-green-600",
           },
           {
             title: "Premier Plans",
-            value: shops
-              .filter((s) => s.subscription === "premier")
-              .length.toString(),
+            value: shopStats.premier.toString(),
             description: "Premium subscribers",
             icon: Crown,
             color: "text-yellow-600",
           },
           {
             title: "Trial Plans",
-            value: shops
-              .filter((s) => s.subscription === "trial")
-              .length.toString(),
+            value: shopStats.trial.toString(),
             description: "Free trial users",
             icon: XCircle,
             color: "text-gray-600",
@@ -392,31 +402,11 @@ export default function AdminShops() {
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium">
-                                      Subscription
+                                      Rating
                                     </label>
-                                    <div className="mt-1">
-                                      <Select
-                                        value={shop.subscription}
-                                        onValueChange={(
-                                          value: SubscriptionPlan,
-                                        ) => updateSubscription(shop.id, value)}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="trial">
-                                            Trial
-                                          </SelectItem>
-                                          <SelectItem value="basic">
-                                            Basic
-                                          </SelectItem>
-                                          <SelectItem value="premier">
-                                            Premier
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                    <p className="text-sm text-gray-600">
+                                      {shop.rating}★ ({shop.totalOrders} orders)
+                                    </p>
                                   </div>
                                 </div>
 
@@ -450,9 +440,172 @@ export default function AdminShops() {
                           </DialogContent>
                         </Dialog>
 
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingShop(shop)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Edit Shop - {shop.name}</DialogTitle>
+                              <DialogDescription>
+                                Update shop information and settings
+                              </DialogDescription>
+                            </DialogHeader>
+                            {editingShop && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="edit-name">Shop Name</Label>
+                                    <Input
+                                      id="edit-name"
+                                      value={editingShop.name}
+                                      onChange={(e) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          name: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-phone">Phone</Label>
+                                    <Input
+                                      id="edit-phone"
+                                      value={editingShop.phone}
+                                      onChange={(e) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          phone: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-price">
+                                      Price per Litre
+                                    </Label>
+                                    <Input
+                                      id="edit-price"
+                                      type="number"
+                                      value={editingShop.pricePerLitre}
+                                      onChange={(e) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          pricePerLitre:
+                                            parseFloat(e.target.value) || 0,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-minimum">
+                                      Minimum Order
+                                    </Label>
+                                    <Input
+                                      id="edit-minimum"
+                                      type="number"
+                                      value={editingShop.minimumOrderLitres}
+                                      onChange={(e) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          minimumOrderLitres:
+                                            parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-zone">
+                                      Operating Zone (km)
+                                    </Label>
+                                    <Input
+                                      id="edit-zone"
+                                      type="number"
+                                      value={editingShop.operatingZone}
+                                      onChange={(e) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          operatingZone:
+                                            parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-subscription">
+                                      Subscription
+                                    </Label>
+                                    <Select
+                                      value={editingShop.subscription}
+                                      onValueChange={(
+                                        value: SubscriptionPlan,
+                                      ) =>
+                                        setEditingShop({
+                                          ...editingShop,
+                                          subscription: value,
+                                        })
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="trial">
+                                          Trial
+                                        </SelectItem>
+                                        <SelectItem value="basic">
+                                          Basic
+                                        </SelectItem>
+                                        <SelectItem value="premier">
+                                          Premier
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <Label htmlFor="edit-address">Address</Label>
+                                  <Input
+                                    id="edit-address"
+                                    value={editingShop.location.address}
+                                    onChange={(e) =>
+                                      setEditingShop({
+                                        ...editingShop,
+                                        location: {
+                                          ...editingShop.location,
+                                          address: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setEditingShop(null)}
+                                    className="flex-1"
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => updateShop(editingShop)}
+                                    className="flex-1 bg-water-600 hover:bg-water-700"
+                                  >
+                                    Save Changes
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
 
                         <Button
                           size="sm"

@@ -8,11 +8,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminShops from "./pages/admin/Shops";
+import AdminAddShop from "./pages/admin/AddShop";
+import AdminUsers from "./pages/admin/Users";
 import AdminOrders from "./pages/admin/Orders";
+import AdminPayments from "./pages/admin/Payments";
+import AdminSettings from "./pages/admin/Settings";
 import ShopDashboard from "./pages/shop/Dashboard";
 import ShopOrders from "./pages/shop/Orders";
 import ShopCustomers from "./pages/shop/Customers";
 import ShopProducts from "./pages/shop/Products";
+import ShopDelivery from "./pages/shop/Delivery";
+import ShopSettings from "./pages/shop/Settings";
 import ClientDashboard from "./pages/client/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -21,9 +27,6 @@ import { AdminLayout } from "./components/layouts/AdminLayout";
 import { ShopLayout } from "./components/layouts/ShopLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { NotificationsPage } from "./components/NotificationsPage";
-
-// Placeholder pages
-import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
 
@@ -59,14 +62,21 @@ const App = () => (
             }
           />
           <Route
+            path="/admin/shops/add"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <AdminAddShop />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/users"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <PlaceholderPage
-                    title="User Management"
-                    description="Manage platform users"
-                  />
+                  <AdminUsers />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -86,10 +96,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <PlaceholderPage
-                    title="Payment Management"
-                    description="Monitor payments and transactions"
-                  />
+                  <AdminPayments />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -99,10 +106,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <PlaceholderPage
-                    title="Platform Settings"
-                    description="Configure platform settings"
-                  />
+                  <AdminSettings />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -164,10 +168,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
-                  <PlaceholderPage
-                    title="Delivery Management"
-                    description="Track deliveries and manage delivery zones"
-                  />
+                  <ShopDelivery />
                 </ShopLayout>
               </ProtectedRoute>
             }
@@ -177,10 +178,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
-                  <PlaceholderPage
-                    title="Shop Settings"
-                    description="Configure your shop settings"
-                  />
+                  <ShopSettings />
                 </ShopLayout>
               </ProtectedRoute>
             }
