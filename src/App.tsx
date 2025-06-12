@@ -7,13 +7,18 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Pages
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminShops from "./pages/admin/Shops";
+import AdminOrders from "./pages/admin/Orders";
 import ShopDashboard from "./pages/shop/Dashboard";
+import ShopOrders from "./pages/shop/Orders";
+import ClientDashboard from "./pages/client/Dashboard";
 import NotFound from "./pages/NotFound";
 
 // Layouts
 import { AdminLayout } from "./components/layouts/AdminLayout";
 import { ShopLayout } from "./components/layouts/ShopLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { NotificationsPage } from "./components/NotificationsPage";
 
 // Placeholder pages
 import PlaceholderPage from "./pages/PlaceholderPage";
@@ -46,10 +51,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <PlaceholderPage
-                    title="Shop Management"
-                    description="Manage all registered water shops"
-                  />
+                  <AdminShops />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -72,10 +74,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <PlaceholderPage
-                    title="Order Management"
-                    description="View all orders across the platform"
-                  />
+                  <AdminOrders />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -106,6 +105,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/notifications"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <NotificationsPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Shop routes */}
           <Route
@@ -123,10 +132,7 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
-                  <PlaceholderPage
-                    title="Order Management"
-                    description="Manage your shop orders"
-                  />
+                  <ShopOrders />
                 </ShopLayout>
               </ProtectedRoute>
             }
@@ -183,16 +189,35 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/shop/notifications"
+            element={
+              <ProtectedRoute allowedRoles={["shop"]}>
+                <ShopLayout>
+                  <NotificationsPage />
+                </ShopLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Client routes */}
           <Route
             path="/client"
             element={
               <ProtectedRoute allowedRoles={["client"]}>
-                <PlaceholderPage
-                  title="Client Dashboard"
-                  description="Welcome to WaterMate client portal"
-                />
+                <ClientDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/client/notifications"
+            element={
+              <ProtectedRoute allowedRoles={["client"]}>
+                <div className="min-h-screen bg-gradient-to-br from-water-50 via-blue-50 to-white p-6">
+                  <div className="max-w-4xl mx-auto">
+                    <NotificationsPage />
+                  </div>
+                </div>
               </ProtectedRoute>
             }
           />
