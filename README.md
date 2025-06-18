@@ -12,19 +12,19 @@ WaterMate is a full-stack SaaS platform designed to simplify and digitize the de
 
 ## ✨ Features
 
-### 🚚 For Clients
+### For Clients
 - Browse and order water from nearby shops
 - Real-time delivery tracking
 - Secure M-Pesa and cash-on-delivery payments
 - View order history and notifications
 
-### 🏪 For Shops
+### For Shops
 - Manage shop profile, pricing, and delivery zones
 - Accept and process orders
 - Track earnings and order stats
 - Subscription management (Trial, Basic, Premier)
 
-### 🛠️ For Admins
+### For Admins
 - Platform analytics (orders, revenue, active users)
 - Shop and client management
 - Subscription distribution and performance metrics
@@ -32,16 +32,16 @@ WaterMate is a full-stack SaaS platform designed to simplify and digitize the de
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
-| Frontend         | Backend         | Database       | Integrations       |
-|------------------|------------------|----------------|--------------------|
-| React + Tailwind CSS | Golang (Gin)       | PostgreSQL      | M-Pesa API         |
-| TypeScript       | RESTful APIs     |                | Google Maps API    |
+| Frontend             |  Integrations    |
+|--------------------- |------------------|
+| React + Tailwind CSS |   M-Pesa API     |
+| TypeScript           |   Google Maps API|
 
 ---
 
-## 📦 Folder Structure
+## Folder Structure
 
 ```bash
 .
@@ -63,4 +63,28 @@ WaterMate is a full-stack SaaS platform designed to simplify and digitize the de
 
 
 ```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js & Yarn/npm & Vite
+<!-- - Go (v1.21+)
+- PostgreSQL -->
+- M-Pesa Developer Account
+
+### Clone the repo
+
+```bash
+git clone git@github.com:spookeyy/WaterMate-WebApp.git
+cd WaterMate-WebApp
+
+npm install
+npm run dev
+```
+
+
 # Author
+Spookie (Meshack Kataboi)
+Kenyan Software Engineer | mkataboi@marps.co.ke
+Contact: [pangasmeshack@gmail.com]
