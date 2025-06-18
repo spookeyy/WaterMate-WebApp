@@ -84,7 +84,7 @@ npm run dev
 ```
 
 
-# Author
-Spookie (Meshack Kataboi)
-Kenyan Software Engineer | mkataboi@marps.co.ke
-Contact: [pangasmeshack@gmail.com]
+## Author
+#### Spookie (Meshack Kataboi)
+#### Kenyan Software Engineer | mkataboi@marps.co.ke
+#### Contact: [pangasmeshack@gmail.com]
